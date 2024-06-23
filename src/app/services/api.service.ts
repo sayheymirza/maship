@@ -11,6 +11,6 @@ export class ApiService {
     ) { }
 
     public lookup(ip?: string) {        
-        return lastValueFrom<any>(this.httpClient.get('http://localhost:4200/api/v1/ip' + (ip == undefined || ip.length == 0 ? '' : `?ip=${ip}`)));
+        return lastValueFrom<any>(this.httpClient.get('https://maship.ir/api/v1/ip' + (ip == undefined || ip.length == 0 ? '' : `?ip=${ip}`)));
     }
 }
