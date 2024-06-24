@@ -1,237 +1,83 @@
-import { isPlatformBrowser } from '@angular/common';
-import { Component, ElementRef, Inject, PLATFORM_ID, ViewChild } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ApiService } from '../services/api.service';
-
-declare const L: any;
+import { FooterComponent } from '../components/footer.component';
+import { HeaderComponent } from '../components/header.component';
+import { MapIpComponent } from '../components/map-ip.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, MapIpComponent, HeaderComponent, FooterComponent],
   template: `
-    <header class="min-h-16">
-      <nav class="flex flex-nowrap items-center gap-2 container h-full mx-auto">
-        <a routerLink="/" class="ms-2">
-          <strong class="text-xl">مش آیپی</strong>
-        </a>
+    <app-header class="md:hidden px-4"/>
 
-        <div class="flex-1"></div>
-        
-        <a href="https://console.ohmyapi.com" target="_blank" class="btn btn-primary">
-          توسعه دهندگان
-        </a>
-      </nav>
-    </header>
+    <section class="grid md:grid-cols-2 gap-4 min-h-fit md:h-dvh">
+      <app-map-ip class="rounded-btn m-4 h-[calc(100dvh-64px-36px)] md:h-[calc(100dvh-36px)]"/>
 
-    <section class="w-full min-h-fit h-[calc(100dvh-128px)] overflow-hidden relative rounded-btn container mx-auto">
-      <div class="w-full h-full absolute inset-0 z-0" #map></div>
+      <section class="flex flex-col gap-4 p-4">
+         <app-header class="hidden md:block"/>
 
-      <div class="flex flex-col absolute right-0 top-0 bottom-0 z-10 w-72 p-4 bg-gradient-to-bl from-white/80 to-white/60 backdrop-blur shadow-xl transition-all"
-        [class.-right-72]="ip == undefined"
-      >
-         <!-- ip input -->
-        <div class="form-control">
-          <div class="input input-bordered input-sm bg-transparent flex flex-nowrap items-center gap-2"
-            [class.input-error]="badIp"
-          >
-            <i class="material-icons-round text-gray-400 !text-[20px]">search</i>
-            <input [(ngModel)]="ip" (keyup)="onIpKeyUp()" type="text" dir="ltr" placeholder="اون IP که می خواهید رو وارد کنید" class="grow text-right"/>
-          </div>
+         <h1 class="text-6xl font-bold lg:max-w-[70%] leading-[5rem] mt-10">
+            از یک IP این اطلاعات رو داشته باش
+         </h1>
 
-          <label class="label">
-            <span class="label-text text-xs text-error h-[24px]" [class.opacity-0]="!badIp">این IP اشتباه است</span>
-          </label>
-        </div>
+         <p class="max-w-[70%] leading-8 text-gray-600">یه API که بتونی فقط با همون IP که بهت درخواست می دهند بدونی کجاست، شرکت ارائه دهنده اش کیه، منطقه زمانیش چنده و خیلی چیز های دیگه</p>
 
-        @if(data) {
-          <div class="flex flex-col gap-2">
-            <div class="grid grid-cols-4 gap-1 mb-4">
-              <div class="flex flex-col items-center gap-2 rounded-btn px-2 py-4 transition-all hover:bg-black/5"
-                [class.text-gray-400]="!data['mobile']"
-                [class.text-green-500]="data['mobile']"
-                >
-                <i class="material-icons-round">smartphone</i>
-                <span class="text-xs">موبایل</span>
+         <div class="grid grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-2 lg:max-w-[70%]">
+            <div class="flex flex-col items-start gap-2 p-4 rounded-btn transition-all hover:bg-base-200">
+              <div class="flex flex-nowrap items-center gap-2">
+                <i class="material-icons-round text-yellow-400">bolt</i>
+                <h3 class="font-bold">قدرتمند و مقیاس پذیر</h3>
               </div>
-
-              <div class="flex flex-col items-center gap-2 rounded-btn px-2 py-4 transition-all hover:bg-black/5"
-                [class.text-gray-400]="!data['crawler']"
-                [class.text-green-500]="data['crawler']"
-                >
-                <i class="material-icons-round">smart_toy</i>
-                <span class="text-xs">ربات</span>
-              </div>
-
-              <div class="flex flex-col items-center gap-2 rounded-btn px-2 py-4 transition-all hover:bg-black/5"
-                [class.text-gray-400]="!data['datacenter']"
-                [class.text-green-500]="data['datacenter']"
-                >
-                <i class="material-icons-round">dns</i>
-                <span class="text-xs">دیتاسنتر</span>
-              </div>
-
-              <div class="flex flex-col items-center gap-2 rounded-btn px-2 py-4 transition-all hover:bg-black/5"
-                [class.text-gray-400]="!data['vpn']"
-                [class.text-green-500]="data['vpn']"
-                >
-                <i class="material-icons-round">vpn_key</i>
-                <span class="text-xs">دیتاسنتر</span>
-              </div>
+              <p class="text-gray-600 text-sm leading-6">از هزار درخواست در ماه تا چندین میلیون در روز، زیرساخت ابری مقیاس‌پذیری که ما به شما ارائه می دهیم این توانایی را دارد.</p>
             </div>
 
-            <div class="flex flex-nowrap items-center gap-4 px-4">
-              <img
-                class="w-14 h-10 rounded-lg object-conver object-center"
-                src="https://www.worldometers.info/img/flags/{{data['country_code'].toLowerCase()}}-flag.gif"
-                alt="{{data['Country']}}" />
-              
-              <div class="flex flex-col gap-1 flex-1">
-                <span class="text-xs text-gray-600">کشور</span>
-                <strong>{{data['country']}}</strong>
+            <div class="flex flex-col items-start gap-2 p-4 rounded-btn transition-all hover:bg-base-200">
+              <div class="flex flex-nowrap items-center gap-2">
+                <i class="material-icons-round text-sky-400">cloud_sync</i>
+                <h3 class="font-bold">داده های بروز</h3>
               </div>
+              <p class="text-gray-600 text-sm leading-6">سال ها جمع آوری داده ها و همکاری های طولانی مدت با ISP های بزرگ، بالاترین کیفیت داده IP را در حال حاضر در بازار رو تضمین می کنیم.</p>
             </div>
 
-            <div class="grid grid-cols-2 gap-2">
-              <div class="flex flex-col gap-2 rounded-btn p-2 transition-all hover:bg-black/5">
-                <span class="text-xs text-gray-600">قاره</span>
-                <strong>{{data['continent']}}</strong>
+            <div class="flex flex-col items-start gap-2 p-4 rounded-btn transition-all hover:bg-base-200">
+              <div class="flex flex-nowrap items-center gap-2">
+                <i class="material-icons-round text-slate-400">build</i>
+                <h3 class="font-bold">بسیار ساده</h3>
               </div>
-              
-              <div class="flex flex-col gap-2 rounded-btn p-2 transition-all hover:bg-black/5">
-                <span class="text-xs text-gray-600">شهر</span>
-                <strong>{{data['city']}}</strong>
-              </div>
-              
-              <div class="flex flex-col gap-2 rounded-btn p-2 col-span-2 transition-all hover:bg-black/5">
-                <span class="text-xs text-gray-600">منطقه زمانی</span>
-                <strong>{{data['timezone']}}</strong>
-              </div>
-              
-              <div class="flex flex-col gap-2 rounded-btn p-2 col-span-2 transition-all hover:bg-black/5">
-                <span class="text-xs text-gray-600">زمان کنونی</span>
-                <strong>{{data['date']}}</strong>
-              </div>
-
-              <div class="flex flex-col gap-2 rounded-btn p-2 transition-all hover:bg-black/5">
-                <span class="text-xs text-gray-600">نوع</span>
-                <strong>{{data['type'].toUpperCase()}}</strong>
-              </div>
-
-              <div class="flex flex-col gap-2 rounded-btn p-2 transition-all hover:bg-black/5">
-                <span class="text-xs text-gray-600">ASN</span>
-                <strong>{{data['asn']}}</strong>
-              </div>
-              
-              <div class="flex flex-col gap-2 rounded-btn p-2 col-span-2 transition-all hover:bg-black/5">
-                <span class="text-xs text-gray-600">شرکت ارائه دهنده</span>
-                <strong>{{data['company']}}</strong>
-              </div>
-              
-              @if(data['range']) {
-                <div class="flex flex-col gap-2 rounded-btn p-2 col-span-2 transition-all hover:bg-black/5">
-                  <span class="text-xs text-gray-600">رنج آی پی</span>
-                  <strong>{{data['range']}}</strong>
-                </div>
-              }
+              <p class="text-gray-600 text-sm leading-6">با REST API ما شما فقط کافیه IP رو درخواست دهید و تمامی اطلاعات رو به ساده ترین صورت JSON داشته باشید.</p>
             </div>
-          </div>
-        }
-      </div>
+
+            <div class="flex flex-col items-start gap-2 p-4 rounded-btn transition-all hover:bg-base-200">
+              <div class="flex flex-nowrap items-center gap-2">
+                <i class="material-icons-round text-green-400">local_offer</i>
+                <h3 class="font-bold">هزینه بصرفه</h3>
+              </div>
+              <p class="text-gray-600 text-sm leading-6">نه فقط اطلاعات IP بلکه API های دیگر را هم با هزینه های بسیار بصرفه و حتی رایگان از OhMyAPI دریافت کنید</p>
+            </div>
+         </div>
+
+         <div class="flex flex-nowrap items-center justify-center md:justify-start gap-4">
+          <a href="https://console.ohmyapi.com" class="btn btn-primary">
+            دریافت توکن دسترسی
+          </a>
+
+          <a href="https://docs.ohmyapi.com/api?q=api.v1.ip.lookup" class="btn">
+            مستندات و راهنمایی
+          </a>
+         </div>
+
+         <app-footer class="hidden md:flex mt-auto"/>
+      </section>
     </section>
+
+    <app-footer class="md:hidden"/>
   `,
   host: {
-    class: 'flex flex-col w-full h-full'
+    class: 'flex flex-col w-full'
   }
 })
 export class HomeComponent {
-  @ViewChild('map')
-  private mapElem!: ElementRef;
 
-  private map: any;
-  private marker: any;
-
-  public ip?: string;
-  public badIp: boolean = false;
-
-  public data: any;
-
-  private timeout: any;
-
-  constructor(
-    @Inject(PLATFORM_ID)
-    private platform: string,
-    private apiService: ApiService
-  ) { }
-
-  ngAfterViewInit() {
-    if (isPlatformBrowser(this.platform)) {
-      this.map = L.map(this.mapElem.nativeElement, {
-        attributionControl: false,
-        zoomControl: false
-      }).setView([0, 0], 2);
-
-      L.tileLayer('http://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}', {
-      }).addTo(this.map);
-
-      this.lookup();
-    }
-  }
-
-  public onIpKeyUp() {
-    const regex = /^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$/;
-
-    clearTimeout(this.timeout);
-
-    if (this.ip!.length == 0) {
-      this.badIp = false;
-    }
-    else if (regex.test(this.ip!)) {
-      this.badIp = false;
-
-      this.timeout = setTimeout(() => {
-        this.lookup();
-      }, 100);
-    } else {
-      this.badIp = true;
-    }
-  }
-
-  private lookup() {
-    this.apiService.lookup(this.ip).then((res) => {
-      if (res['status']) {
-        this.data = res['data'];
-        this.ip = this.data['ip'];
-
-        console.log(this.ip);
-        
-
-        const date = new Date(this.data['local_time']);
-
-        this.data['date'] = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${date.getMinutes()}`
-
-        if (this.marker) {
-          this.map.removeLayer(this.marker);
-        }
-
-        if (this.data['latitude']) {
-          const icon = L.divIcon({
-            className: 'custom-div-icon',
-            html: "<i class='material-icons-round !text-[36px] !w-[36px] !h-[36px] text-red-500'>place</i>",
-            iconSize: [36, 36],
-            iconAnchor: [36 / 2, 36]
-          });
-
-          const latlon = [this.data['latitude'], this.data['longitude']];
-
-          this.marker = L.marker(latlon, {
-            icon: icon
-          }).addTo(this.map);
-
-          this.map.flyTo(latlon, 11);
-        }
-      }
-    });
-  }
 }
