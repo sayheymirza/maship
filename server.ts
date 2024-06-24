@@ -6,8 +6,10 @@ import { fileURLToPath } from 'node:url';
 import bootstrap from './src/main.server';
 
 import { publicIpv4 } from 'public-ip';
+import { rateLimit } from 'express-rate-limit';
 
 import axios from "axios";
+import cors from "cors";
 
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
@@ -20,12 +22,22 @@ export function app(): express.Express {
 
   server.set('view engine', 'html');
   server.set('views', browserDistFolder);
+  server.use(cors());
+
 
   // Example Express Rest API endpoints
   // server.get('/api/**', (req, res) => { });
 
-  server.get('/api/v1/ip', async (req, res) => {
-    let ip = req.query['ip'] ?? req.headers['x-forwarded-for'] ?? req.socket.remoteAddress;    
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+    standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+    // store: ... , // Redis, Memcached, etc. See below.
+  })
+
+  server.get('/api/v1/ip', limiter, async (req, res) => {
+    let ip = req.query['ip'] ?? req.headers['CF-Connecting-IP'] ?? req.headers['cf-pseudo-ipv4'] ?? req.headers['x-forwarded-for'] ?? req.socket.remoteAddress;
 
     if (ip == '::1') {
       ip = await publicIpv4();
