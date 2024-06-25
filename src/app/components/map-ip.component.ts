@@ -64,27 +64,57 @@ declare const L: any;
             </div>
           </div>
 
-          <div class="flex flex-nowrap items-center gap-4 px-4">
+          <div class="flex flex-nowrap items-center gap-4 px-4 mb-2">
             <img
               class="w-14 h-10 rounded-lg object-conver object-center"
-              src="https://www.worldometers.info/img/flags/{{data['country_code'].toLowerCase()}}-flag.gif"
-              alt="{{data['Country']}}" />
+              src="https://www.worldometers.info/img/flags/{{data['country']['iso_code'].toLowerCase()}}-flag.gif"
+              alt="{{data['country']['names']['fa']}}" />
             
             <div class="flex flex-col gap-1 flex-1">
               <span class="text-xs text-gray-600">کشور</span>
-              <strong>{{data['country']}}</strong>
+              <strong class="truncate">{{data['country']['names']['fa']}}</strong>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-2">
             <div class="flex flex-col gap-2 rounded-btn p-2 transition-all hover:bg-black/5">
               <span class="text-xs text-gray-600">قاره</span>
-              <strong>{{data['continent']}}</strong>
+              <strong dir="ltr" class="truncate text-right">{{data['continent']['names']['fa']}}</strong>
+            </div>
+            
+            <div class="flex flex-col gap-2 rounded-btn p-2 transition-all hover:bg-black/5">
+              <span class="text-xs text-gray-600">پایتخت</span>
+              <strong class="truncate">{{data['country']['capital']}}</strong>
             </div>
             
             <div class="flex flex-col gap-2 rounded-btn p-2 transition-all hover:bg-black/5">
               <span class="text-xs text-gray-600">شهر</span>
-              <strong>{{data['city']}}</strong>
+              <strong dir="ltr" class="truncate text-right">{{data['city']['name']}}</strong>
+            </div>
+            
+            <div class="flex flex-col gap-2 rounded-btn p-2 transition-all hover:bg-black/5">
+              <span class="text-xs text-gray-600">پیش شماره</span>
+              <strong>{{data['country']['phone_code']}}+</strong>
+            </div>
+            
+            <div class="flex flex-col gap-2 rounded-btn p-2 transition-all hover:bg-black/5">
+              <span class="text-xs text-gray-600">واحد پولی</span>
+              <strong>{{data['country']['currency']}}</strong>
+            </div>
+
+            <div class="flex flex-col gap-2 rounded-btn p-2 transition-all hover:bg-black/5">
+              <span class="text-xs text-gray-600">کد پستی</span>
+              <strong>{{data['zip']}}</strong>
+            </div>
+            
+            <div class="flex flex-col gap-2 rounded-btn p-2 transition-all hover:bg-black/5">
+              <span class="text-xs text-gray-600">زبان ها</span>
+
+              <div class="flex flex-wrap gap-1">
+                @for (item of data['country']['languages']; track $index) {
+                  <strong class="tooltip" [attr.data-tip]="item['name']">{{item['name_native']}}</strong>
+                }
+              </div>
             </div>
             
             <div class="flex flex-col gap-2 rounded-btn p-2 col-span-2 transition-all hover:bg-black/5">
@@ -99,23 +129,23 @@ declare const L: any;
 
             <div class="flex flex-col gap-2 rounded-btn p-2 transition-all hover:bg-black/5">
               <span class="text-xs text-gray-600">نوع</span>
-              <strong>{{data['type'].toUpperCase()}}</strong>
+              <strong>{{data['company']['type'].toUpperCase()}}</strong>
             </div>
 
             <div class="flex flex-col gap-2 rounded-btn p-2 transition-all hover:bg-black/5">
               <span class="text-xs text-gray-600">ASN</span>
-              <strong>{{data['asn']}}</strong>
+              <strong>{{data['asn']['id']}}</strong>
             </div>
             
-            <div class="flex flex-col gap-2 rounded-btn p-2 col-span-2 transition-all hover:bg-black/5">
+            <div class="flex flex-col items-start gap-2 rounded-btn p-2 col-span-2 transition-all hover:bg-black/5">
               <span class="text-xs text-gray-600">شرکت ارائه دهنده</span>
-              <strong>{{data['company']}}</strong>
+              <strong>{{data['company']['name']}}</strong>
             </div>
             
-            @if(data['range']) {
+            @if(data['company']['network']) {
               <div class="flex flex-col gap-2 rounded-btn p-2 col-span-2 transition-all hover:bg-black/5">
                 <span class="text-xs text-gray-600">رنج آی پی</span>
-                <strong>{{data['range']}}</strong>
+                <strong>{{data['company']['network']}}</strong>
               </div>
             }
           </div>
@@ -185,10 +215,7 @@ export class MapIpComponent {
         this.data = res['data'];
         this.ip = this.data['ip'];
 
-        console.log(this.ip);
-
-
-        const date = new Date(this.data['local_time']);
+        const date = new Date(this.data['localtime']);
 
         this.data['date'] = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${date.getMinutes()}`
 
@@ -196,7 +223,7 @@ export class MapIpComponent {
           this.map.removeLayer(this.marker);
         }
 
-        if (this.data['latitude']) {
+        if (this.data['location']['latitude']) {
           const icon = L.divIcon({
             className: 'custom-div-icon',
             html: "<i class='material-icons-round !text-[36px] !w-[36px] !h-[36px] text-red-500'>place</i>",
@@ -204,7 +231,7 @@ export class MapIpComponent {
             iconAnchor: [36 / 2, 36]
           });
 
-          const latlon = [this.data['latitude'], this.data['longitude']];
+          const latlon = [this.data['location']['latitude'], this.data['location']['longitude']];
 
           this.marker = L.marker(latlon, {
             icon: icon
